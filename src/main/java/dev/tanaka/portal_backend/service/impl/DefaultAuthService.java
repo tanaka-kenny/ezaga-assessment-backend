@@ -56,6 +56,4 @@ public class DefaultAuthService implements AuthService {
                 .build();
         tokenRepository.save(token);
     }
-
-
 }
