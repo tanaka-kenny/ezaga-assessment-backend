@@ -7,5 +7,5 @@ create table user (
     surname varchar(255) not null,
     email varchar(255) not null,
     password varchar(255) not null,
-    primary key key(id)
+    primary key key(email)
 )
