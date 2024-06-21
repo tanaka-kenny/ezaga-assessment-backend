@@ -5,7 +5,7 @@ import dev.tanaka.portal_backend.dto.AuthResponse;
 import dev.tanaka.portal_backend.dto.RegisterRequest;
 import dev.tanaka.portal_backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,17 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
-    }
-    @PostMapping("/authenticate")
-    public ResponseEntity<AuthResponse> authenticate(@RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public AuthResponse register(@RequestBody RegisterRequest request) {
+        return authService.register(request);
     }
 
+    @PostMapping("/login")
+    public AuthResponse authenticate(@RequestBody AuthRequest request) {
+        log.info("Authenticating request: {}", request);
+        AuthResponse authResponse = authService.login(request);
+        log.info("Auth response: {}", authResponse);
+        return authResponse;
+    }
 }

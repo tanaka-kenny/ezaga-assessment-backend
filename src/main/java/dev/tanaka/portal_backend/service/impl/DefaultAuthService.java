@@ -11,6 +11,8 @@ import dev.tanaka.portal_backend.repository.UserRepository;
 import dev.tanaka.portal_backend.service.AuthService;
 import dev.tanaka.portal_backend.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,10 +23,24 @@ public class DefaultAuthService implements AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
+    private final AuthenticationManager authenticationManager;
+
 
     @Override
     public AuthResponse login(AuthRequest authRequest) {
-        return null;
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        authRequest.email(),
+                        authRequest.password()
+                )
+        );
+        var user = userRepository.findByEmail(authRequest.email())
+                .orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+        revokeAllUserTokens(user);
+        saveUserToken(user, jwtToken);
+        return new AuthResponse(jwtToken, refreshToken);
     }
 
     @Override
@@ -55,5 +71,17 @@ public class DefaultAuthService implements AuthService {
                 .revoked(false)
                 .build();
         tokenRepository.save(token);
+    }
+
+
+    private void revokeAllUserTokens(User user) {
+        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+        if (validUserTokens.isEmpty())
+            return;
+        validUserTokens.forEach(token -> {
+            token.setExpired(true);
+            token.setRevoked(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 }
