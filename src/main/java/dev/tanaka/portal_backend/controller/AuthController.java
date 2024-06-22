@@ -6,10 +6,7 @@ import dev.tanaka.portal_backend.dto.RegisterRequest;
 import dev.tanaka.portal_backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,5 +27,10 @@ public class AuthController {
         AuthResponse authResponse = authService.login(request);
         log.info("Auth response: {}", authResponse);
         return authResponse;
+    }
+
+    @PostMapping("/logout/{email}")
+    public void logout(@PathVariable String email) {
+        authService.logout(email);
     }
 }

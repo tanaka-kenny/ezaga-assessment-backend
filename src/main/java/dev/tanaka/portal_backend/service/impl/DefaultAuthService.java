@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class DefaultAuthService implements AuthService {
@@ -59,6 +61,16 @@ public class DefaultAuthService implements AuthService {
         var refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(savedUser, jwtToken);
         return new AuthResponse(jwtToken, refreshToken, request.email());
+    }
+
+    @Override
+    public void logout(String email) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) throw new RuntimeException("User not found");
+
+        User user = optionalUser.get();
+        revokeAllUserTokens(user);
     }
 
 
