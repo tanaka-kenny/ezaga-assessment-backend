@@ -6,6 +6,7 @@ import dev.tanaka.portal_backend.dto.AuthRequest;
 import dev.tanaka.portal_backend.dto.AuthResponse;
 import dev.tanaka.portal_backend.dto.RegisterRequest;
 import dev.tanaka.portal_backend.enumeration.TokenType;
+import dev.tanaka.portal_backend.exception.UserNotFoundException;
 import dev.tanaka.portal_backend.repository.TokenRepository;
 import dev.tanaka.portal_backend.repository.UserRepository;
 import dev.tanaka.portal_backend.service.AuthService;
@@ -67,7 +68,7 @@ public class DefaultAuthService implements AuthService {
     public void logout(String email) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
 
-        if (optionalUser.isEmpty()) throw new RuntimeException("User not found");
+        if (optionalUser.isEmpty()) throw new UserNotFoundException(email);
 
         User user = optionalUser.get();
         revokeAllUserTokens(user);
