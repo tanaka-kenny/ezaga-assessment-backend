@@ -40,7 +40,7 @@ public class DefaultAuthService implements AuthService {
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, jwtToken);
-        return new AuthResponse(jwtToken, refreshToken);
+        return new AuthResponse(jwtToken, refreshToken, authRequest.email());
     }
 
     @Override
@@ -58,7 +58,7 @@ public class DefaultAuthService implements AuthService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(savedUser, jwtToken);
-        return new AuthResponse(jwtToken, refreshToken);
+        return new AuthResponse(jwtToken, refreshToken, request.email());
     }
 
 
