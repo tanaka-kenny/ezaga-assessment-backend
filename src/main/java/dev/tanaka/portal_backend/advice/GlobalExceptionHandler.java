@@ -1,5 +1,6 @@
 package dev.tanaka.portal_backend.advice;
 
+import dev.tanaka.portal_backend.exception.ExistingEmailFoundException;
 import dev.tanaka.portal_backend.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -14,5 +15,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException e) {
         ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ExistingEmailFoundException.class)
+    public ResponseEntity<Object> handleExistingEmailFoundException(ExistingEmailFoundException e) {
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }

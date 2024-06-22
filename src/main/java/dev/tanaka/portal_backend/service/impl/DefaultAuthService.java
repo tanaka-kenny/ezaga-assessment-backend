@@ -6,6 +6,7 @@ import dev.tanaka.portal_backend.dto.AuthRequest;
 import dev.tanaka.portal_backend.dto.AuthResponse;
 import dev.tanaka.portal_backend.dto.RegisterRequest;
 import dev.tanaka.portal_backend.enumeration.TokenType;
+import dev.tanaka.portal_backend.exception.ExistingEmailFoundException;
 import dev.tanaka.portal_backend.exception.UserNotFoundException;
 import dev.tanaka.portal_backend.repository.TokenRepository;
 import dev.tanaka.portal_backend.repository.UserRepository;
@@ -49,6 +50,10 @@ public class DefaultAuthService implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
         final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+        Optional<User> optionalUser = userRepository.findByEmail(request.email());
+        if (optionalUser.isPresent()) throw new ExistingEmailFoundException(request.email());
+
         var user = User.builder()
                 .firstname(request.firstname())
                 .lastname(request.lastname())
