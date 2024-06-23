@@ -1,5 +1,6 @@
 package dev.tanaka.portal_backend.service.impl;
 
+import dev.tanaka.portal_backend.domain.ConfirmationCode;
 import dev.tanaka.portal_backend.domain.Token;
 import dev.tanaka.portal_backend.domain.User;
 import dev.tanaka.portal_backend.dto.AuthRequest;
@@ -8,11 +9,14 @@ import dev.tanaka.portal_backend.dto.RegisterRequest;
 import dev.tanaka.portal_backend.enumeration.TokenType;
 import dev.tanaka.portal_backend.exception.ExistingEmailFoundException;
 import dev.tanaka.portal_backend.exception.UserNotFoundException;
+import dev.tanaka.portal_backend.repository.ConfirmationCodeRepository;
 import dev.tanaka.portal_backend.repository.TokenRepository;
 import dev.tanaka.portal_backend.repository.UserRepository;
 import dev.tanaka.portal_backend.service.AuthService;
+import dev.tanaka.portal_backend.service.EmailService;
 import dev.tanaka.portal_backend.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +33,8 @@ public class DefaultAuthService implements AuthService {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
+    private final ConfirmationCodeRepository confirmationCodeRepository;
 
 
     @Override
@@ -77,6 +84,27 @@ public class DefaultAuthService implements AuthService {
 
         User user = optionalUser.get();
         revokeAllUserTokens(user);
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()) throw new UserNotFoundException(email);
+
+        User user = optionalUser.get();
+        Random random = new Random();
+        int code = random.nextInt(1100, 9999);
+        ConfirmationCode confirmationCode = new ConfirmationCode();
+        confirmationCode.setConfirmationCode(code);
+        confirmationCode.setUser(user);
+
+        this.confirmationCodeRepository.save(confirmationCode);
+
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setTo(email);
+        simpleMailMessage.setSubject("Password Reset");
+        simpleMailMessage.setText("User this code to reset your password. " + code);
+        this.emailService.sendEmail(simpleMailMessage);
     }
 
 

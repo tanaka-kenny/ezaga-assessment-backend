@@ -18,6 +18,17 @@ spring:
     level:
       org:
         hibernate: DEBUG
+  mail:
+    host: "smtp.gmail.com"
+    port: 587
+    username: "tanakamadondo2@gmail.com"
+    password: "xbwq psoi ugkx besw"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 application:
   security:
     jwt:
