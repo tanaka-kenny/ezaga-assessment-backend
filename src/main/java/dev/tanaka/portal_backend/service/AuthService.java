@@ -9,5 +9,6 @@ public interface AuthService {
     AuthResponse login(AuthRequest authRequest);
     AuthResponse register(RegisterRequest request);
     void logout(String email);
-    void forgotPassword(String email);
+    void requestConfirmationCode(String email);
+    Boolean verifyConfirmationCode(Integer code, AuthRequest authRequest);
 }

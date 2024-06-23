@@ -4,7 +4,6 @@ import dev.tanaka.portal_backend.dto.AuthRequest;
 import dev.tanaka.portal_backend.dto.AuthResponse;
 import dev.tanaka.portal_backend.dto.RegisterRequest;
 import dev.tanaka.portal_backend.service.AuthService;
-import dev.tanaka.portal_backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +34,13 @@ public class AuthController {
         authService.logout(email);
     }
 
-    @PostMapping("forgot-password/{email}")
+    @GetMapping("forgot-password/{email}")
     public void forgotPassword(@PathVariable String email) {
-        authService.forgotPassword(email);
+        authService.requestConfirmationCode(email);
+    }
+
+    @PostMapping("verify-code/{code}")
+    public Boolean verifyCode(@PathVariable Integer code, @RequestBody AuthRequest request) {
+        return authService.verifyConfirmationCode(code, request);
     }
 }

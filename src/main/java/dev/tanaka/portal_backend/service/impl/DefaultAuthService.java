@@ -23,6 +23,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 
@@ -35,6 +36,7 @@ public class DefaultAuthService implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final ConfirmationCodeRepository confirmationCodeRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
     @Override
@@ -56,7 +58,6 @@ public class DefaultAuthService implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         Optional<User> optionalUser = userRepository.findByEmail(request.email());
         if (optionalUser.isPresent()) throw new ExistingEmailFoundException(request.email());
@@ -87,7 +88,7 @@ public class DefaultAuthService implements AuthService {
     }
 
     @Override
-    public void forgotPassword(String email) {
+    public void requestConfirmationCode(String email) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isEmpty()) throw new UserNotFoundException(email);
 
@@ -98,6 +99,10 @@ public class DefaultAuthService implements AuthService {
         confirmationCode.setConfirmationCode(code);
         confirmationCode.setUser(user);
 
+        ConfirmationCode existingConfirmationCode = confirmationCodeRepository.findByUserId(user.getId());
+        if (Objects.nonNull(existingConfirmationCode)) {
+            confirmationCodeRepository.delete(existingConfirmationCode);
+        }
         this.confirmationCodeRepository.save(confirmationCode);
 
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
@@ -105,6 +110,27 @@ public class DefaultAuthService implements AuthService {
         simpleMailMessage.setSubject("Password Reset");
         simpleMailMessage.setText("User this code to reset your password. " + code);
         this.emailService.sendEmail(simpleMailMessage);
+    }
+
+    @Override
+    public Boolean verifyConfirmationCode(Integer code, AuthRequest authRequest) {
+        Optional<User> optionalUser = userRepository.findByEmail(authRequest.email());
+        if (optionalUser.isEmpty()) throw new UserNotFoundException(authRequest.email());
+        User user = optionalUser.get();
+
+        ConfirmationCode confirmationCode = confirmationCodeRepository.findByUserId(user.getId());
+
+        if (Objects.isNull(confirmationCode)) {
+            return false;
+        }
+
+        if (confirmationCode.getConfirmationCode().equals(code)) {
+            user.setPassword(passwordEncoder.encode(authRequest.password()));
+            userRepository.save(user);
+            return true;
+        }
+
+        return false;
     }
 
 
